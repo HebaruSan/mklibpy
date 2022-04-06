@@ -162,8 +162,17 @@ class LsGitProcess(object):
         ]
 
     @cached_property
-    def _l(self):
-        return 'l' in self.__flags
+    def _columns(self):
+        # -g in GNU: "like -l, but do not list owner"
+        # -g in BSD: "This option has no effect."
+        base = (     8 if 'g' in self.__flags and self.__parent.is_gnu
+                else 9 if 'l' in self.__flags
+                else 1 if '1' in self.__flags
+                else 0)
+        # -G in GNU: "in a long listing, don't print group names"
+        # -G in BSD: "Enable colorized output."
+        return (base - 1 if base > 1 and 'G' in self.__flags and self.__parent.is_gnu
+                else base)
 
     @cached_property
     def __color(self):
@@ -193,10 +202,10 @@ class LsGitProcess(object):
             return line
 
         sp = line.split()
-        if len(sp) < 9:
+        if len(sp) < self._columns:
             return line
 
-        dir = sp[8]
+        dir = sp[-1]
         if self.__color:
             dir = remove_switch(dir)
 
@@ -219,7 +228,7 @@ class LsGitProcess(object):
             return system_call_pty(self.__cmd)
 
     def run(self):
-        if not self._l:
+        if self._columns <= 0:
             self.__native_call()
             return
 
