@@ -92,7 +92,7 @@ class Path(object):
         if check_git and self.is_git_repo:
             return {
                 'text': "({})".format(self.git_branch),
-                'color': 'red',
+                'color': 'yellow',
                 'mode': 'bold',
             }
         elif check_venv and self.is_venv:
